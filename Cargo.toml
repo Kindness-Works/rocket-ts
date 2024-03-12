@@ -1,0 +1,9 @@
+[package]
+name = "rocket-ts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+proc-macro2 = "1.0.62"
+syn = { version = "1.0", features = ["full", "visit"] }
+quote = "1.0"
