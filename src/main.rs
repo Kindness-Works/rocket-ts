@@ -137,7 +137,41 @@ fn inner_box_type(val: &Box<syn::Type>) -> Option<String> {
                     syn::PathArguments::None => return Some(String::from("void")),
                 }
             } else {
-                // println!("segment.ident = {}", segment.ident);
+                match &segment.arguments {
+                    syn::PathArguments::AngleBracketed(params) => {
+                        if let Some(syn::GenericArgument::Type(Type::Path(inner_type))) =
+                            params.args.first()
+                        {
+                            if let Some(inner_segment) = inner_type.path.segments.first() {
+                                if inner_segment.ident == "Vec" {
+                                    if let syn::PathArguments::AngleBracketed(inner_params) =
+                                        &inner_segment.arguments
+                                    {
+                                        if let Some(syn::GenericArgument::Type(Type::Path(
+                                            most_inner_type,
+                                        ))) = inner_params.args.first()
+                                        {
+                                            let most_vec_inner_type = format!(
+                                                "{}{}",
+                                                most_inner_type.path.segments.last().unwrap().ident,
+                                                "[]"
+                                            );
+                                            return Some(most_vec_inner_type);
+                                        }
+                                    }
+                                } else {
+                                    return Some(
+                                        inner_type.path.segments.last().unwrap().ident.to_string(),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    syn::PathArguments::Parenthesized(_params) => {
+                        unimplemented!()
+                    }
+                    syn::PathArguments::None => return Some(String::from("void")),
+                }
             }
         }
     }
