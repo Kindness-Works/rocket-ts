@@ -317,7 +317,7 @@ fn _inner_param(type_box: &Box<Type>) -> String {
 }
 
 fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
-    let mut r = String::from("");
+    let mut params = Vec::new();
 
     for arg in args {
         if let FnArg::Typed(syn::PatType { pat, ty, .. }) = arg {
@@ -372,11 +372,11 @@ fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
                     continue;
                 }
             };
-            r.push_str(&format!("{}:{},", param_name, param_type));
+            params.push(format!("{}:{}", param_name, param_type));
         }
     }
 
-    r
+    params.join(",")
 }
 
 #[derive(Debug, Parser)]
