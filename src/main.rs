@@ -3,6 +3,7 @@
 // Assumptions:
 //  * Handlers return a single TypeShare'd type
 
+use clap::{Parser, Subcommand};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::fs::File;
@@ -376,6 +377,39 @@ fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
     }
 
     r
+}
+
+#[derive(Debug, Parser)]
+#[command(name = "rts")]
+#[command(bin_name = "rocket-ts")]
+#[command(about = "A blazing fast type generator for typescript from rocket backend 🦀", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+    #[command()]
+    Generate {
+        #[clap(
+            required = true,
+            help = "Input directory Or Input file",
+            default_value = "thread.rs",
+            short = 'i',
+            long = "input"
+        )]
+        input_dir: PathBuf,
+
+        #[clap(
+            required = true,
+            help = "Output file",
+            default_value = "k7.ts",
+            short = 'o',
+            long = "output"
+        )]
+        output_dir: String,
+    },
 }
 
 fn main() -> std::io::Result<()> {
