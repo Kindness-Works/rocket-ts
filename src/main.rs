@@ -3,6 +3,7 @@
 // Assumptions:
 //  * Handlers return a single TypeShare'd type
 
+use clap::{Parser, Subcommand};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::fs::File;
@@ -136,7 +137,41 @@ fn inner_box_type(val: &Box<syn::Type>) -> Option<String> {
                     syn::PathArguments::None => return Some(String::from("void")),
                 }
             } else {
-                // println!("segment.ident = {}", segment.ident);
+                match &segment.arguments {
+                    syn::PathArguments::AngleBracketed(params) => {
+                        if let Some(syn::GenericArgument::Type(Type::Path(inner_type))) =
+                            params.args.first()
+                        {
+                            if let Some(inner_segment) = inner_type.path.segments.first() {
+                                if inner_segment.ident == "Vec" {
+                                    if let syn::PathArguments::AngleBracketed(inner_params) =
+                                        &inner_segment.arguments
+                                    {
+                                        if let Some(syn::GenericArgument::Type(Type::Path(
+                                            most_inner_type,
+                                        ))) = inner_params.args.first()
+                                        {
+                                            let most_vec_inner_type = format!(
+                                                "{}{}",
+                                                most_inner_type.path.segments.last().unwrap().ident,
+                                                "[]"
+                                            );
+                                            return Some(most_vec_inner_type);
+                                        }
+                                    }
+                                } else {
+                                    return Some(
+                                        inner_type.path.segments.last().unwrap().ident.to_string(),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    syn::PathArguments::Parenthesized(_params) => {
+                        unimplemented!()
+                    }
+                    syn::PathArguments::None => return Some(String::from("void")),
+                }
             }
         }
     }
@@ -316,7 +351,7 @@ fn _inner_param(type_box: &Box<Type>) -> String {
 }
 
 fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
-    let mut r = String::from("");
+    let mut params = Vec::new();
 
     for arg in args {
         if let FnArg::Typed(syn::PatType { pat, ty, .. }) = arg {
@@ -371,67 +406,122 @@ fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
                     continue;
                 }
             };
-            r.push_str(&format!("{}:{},", param_name, param_type));
+            params.push(format!("{}:{}", param_name, param_type));
         }
     }
 
-    r
+    params.join(",")
+}
+
+#[derive(Debug, Parser)]
+#[command(name = "rts")]
+#[command(bin_name = "rocket-ts")]
+#[command(about = "A blazing fast type generator for typescript from rocket backend 🦀", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+    #[command()]
+    Generate {
+        #[clap(
+            required = true,
+            help = "Input directory Or Input file",
+            default_value = "thread.rs",
+            short = 'i',
+            long = "input"
+        )]
+        input_dir: PathBuf,
+
+        #[clap(
+            required = true,
+            help = "Output file",
+            default_value = "k7.ts",
+            short = 'o',
+            long = "output"
+        )]
+        output_dir: String,
+    },
 }
 
 fn main() -> std::io::Result<()> {
+    let args = Cli::parse();
     let mut files: Vec<PathBuf> = vec![];
 
-    let folder_path = "./example-handlers";
-    let entries = fs::read_dir(folder_path)?;
+    match args.command {
+        Commands::Generate {
+            input_dir,
+            output_dir,
+        } => {
+            if input_dir.is_file() {
+                let file_path = input_dir;
+                if let Some(file_name) = file_path.file_name() {
+                    if let Some(file_name_str) = file_name.to_str() {
+                        if file_name_str.ends_with(".rs") {
+                            println!("Loading the Input File : {}", file_name_str);
+                            files.push(file_path);
+                        }
+                    }
+                }
+            } else {
+                let folder_path = input_dir;
+                let entries = fs::read_dir(folder_path)?;
+                for entry in entries {
+                    let entry = entry?;
+                    let file_path = entry.path();
 
-    for entry in entries {
-        let entry = entry?;
-        let file_path = entry.path();
-
-        if let Some(file_name) = file_path.file_name() {
-            if let Some(file_name_str) = file_name.to_str() {
-                if file_name_str.ends_with(".rs") {
-                    println!("Loading {}", file_name_str);
-                    files.push(file_path);
+                    if let Some(file_name) = file_path.file_name() {
+                        if let Some(file_name_str) = file_name.to_str() {
+                            if file_name_str.ends_with(".rs") {
+                                println!("Loading the Input File : {}", file_name_str);
+                                files.push(file_path);
+                            }
+                        }
+                    }
                 }
             }
+
+            println!("Loading the Output File : {}", &output_dir);
+
+            let mut ts = r#"/*
+* Generated by rocket-ts 0.1.0 🚀 🌎
+*/
+   export interface k7 {
+   "#
+            .to_string();
+
+            for file_path in files {
+                let mut visitor = Visitor { functions: vec![] };
+                let contents = fs::read_to_string(&file_path)?;
+                let syntax = syn::parse_file(&contents).expect("Unable to parse file");
+                visitor.visit_file(&syntax);
+
+                let file_name_os_str = file_path.file_name().expect("Failed to get file name");
+                let file_name_str = file_name_os_str.to_str().expect("Failed to convert to str");
+
+                ts.push_str(&format!("    // {file_name_str}\n"));
+                for handler in visitor.functions {
+                    let params = params_as_comma_separated_str(handler.params);
+                    let return_type = inner_return_type(&handler.return_type);
+                    ts.push_str(&format!("    // Route: \"{}\"\n", handler.path));
+                    ts.push_str(&format!(
+                        "    {}: ({}) => {};\n",
+                        handler.name, params, return_type
+                    ));
+                }
+                ts.push('\n')
+            }
+
+            ts.push_str("}\n");
+
+            let mut out = File::create(&output_dir).expect("Could not create file");
+            out.write_all(ts.as_bytes()).expect("Unable to write data");
+
+            println!("Exported 🚀 handlers to {}", &output_dir);
         }
     }
 
-    let mut ts = r#"/*
- * Generated by rocket-ts 0.1.0 🚀 🌎
- */
-export interface k7 {
-"#
-    .to_string();
-
-    for file_path in files {
-        let mut visitor = Visitor { functions: vec![] };
-        let contents = fs::read_to_string(&file_path)?;
-        let syntax = syn::parse_file(&contents).expect("Unable to parse file");
-        visitor.visit_file(&syntax);
-
-        let file_name_os_str = file_path.file_name().expect("Failed to get file name");
-        let file_name_str = file_name_os_str.to_str().expect("Failed to convert to str");
-
-        ts.push_str(&format!("    // {file_name_str}\n"));
-        for handler in visitor.functions {
-            let params = params_as_comma_separated_str(handler.params);
-            let return_type = inner_return_type(&handler.return_type);
-            ts.push_str(&format!("    // Route: \"{}\"\n", handler.path));
-            ts.push_str(&format!(
-                "    {}: ({}) => {};\n",
-                handler.name, params, return_type
-            ));
-        }
-        ts.push('\n')
-    }
-
-    ts.push_str("}\n");
-
-    let mut out = File::create("k7.ts").expect("Could not create file");
-    out.write_all(ts.as_bytes()).expect("Unable to write data");
-
-    println!("Exported 🚀 handlers to k7.ts");
     Ok(())
 }
