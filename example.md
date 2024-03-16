@@ -2,7 +2,7 @@
 
 ## Example
 
-> [!Information]
+> [!NOTE]
 > For the code given below the ts file is generated into the root folder it can also be generated into a different folder by folder/example.ts.
 
 ```bash
@@ -74,7 +74,7 @@ pub async fn escalate_thread(
 
 ### The generated TypeScript file
 
-> [!Information]
+> [!NOTE]
 > The generated typescript file can be found [here](./example.ts)
 
 ```typescript
