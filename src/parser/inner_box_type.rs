@@ -1,5 +1,21 @@
 use syn::Type;
 
+/// Extracts the innermost type name from a Box containing a syn::Type.
+///
+/// This function takes a reference to a Box containing a syn::Type and returns the innermost
+/// type name as a String if it matches certain patterns. It traverses through nested types,
+/// looking for specific patterns such as Result<Json<T>> or Json<T> to extract the inner type.
+///
+/// # Arguments
+///
+/// * `val` - A reference to a Box containing a syn::Type.
+///
+/// # Returns
+///
+/// An Option<String>:
+/// - Some(String): If the innermost type is successfully extracted, it returns the type name as a String.
+/// - None: If the provided type does not match any expected pattern.
+
 pub fn inner_box_type(val: &Box<syn::Type>) -> Option<String> {
     if let Type::Path(type_path) = &**val {
         if let Some(segment) = type_path.path.segments.first() {

@@ -1,5 +1,18 @@
 use syn::Type;
 
+/// Extracts the inner type from a syn::PathSegment.
+///
+/// This function is used to extract the inner type from a syn::PathSegment, specifically handling
+/// Result<Json<T>> and Json<T> types. It returns the innermost type as a String.
+///
+/// # Arguments
+///
+/// * `segment` - A reference to a syn::PathSegment.
+///
+/// # Returns
+///
+/// An Option containing the innermost type as a String if found, otherwise None.
+
 pub fn inner_type_from_path_segment(segment: &syn::PathSegment) -> Option<String> {
     if segment.ident == "Result" {
         match &segment.arguments {

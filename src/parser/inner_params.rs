@@ -1,5 +1,18 @@
 use syn::Type;
 
+/// Extracts the inner parameter type from a boxed Type.
+///
+/// This function is used to extract the inner parameter type from a boxed Type. It is specifically
+/// designed to handle Result<Json<T>> types and return the innermost type T.
+///
+/// # Arguments
+///
+/// * `type_box` - A reference to a boxed Type.
+///
+/// # Returns
+///
+/// A String representing the inner parameter type extracted from the boxed Type.
+
 pub fn _inner_param(type_box: &Box<Type>) -> String {
     if let Type::Path(type_path) = &**type_box {
         if let Some(segment) = type_path.path.segments.first() {

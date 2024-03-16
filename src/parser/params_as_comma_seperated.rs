@@ -4,6 +4,20 @@ use syn::{FnArg, Type};
 
 use crate::inner_type_from_path_segment;
 
+/// Generates a comma-separated string of parameter names and their types.
+///
+/// This function takes a vector of FnArg items, typically representing the arguments of a function,
+/// and generates a comma-separated string of parameter names and their types. It handles various
+/// types of function arguments including references, path types, and more.
+///
+/// # Arguments
+///
+/// * `args` - A vector of FnArg items representing the arguments of a function.
+///
+/// # Returns
+///
+/// A comma-separated string of parameter names and their types.
+
 pub fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
     let mut params = Vec::new();
 

@@ -16,9 +16,9 @@ use parser::visitor::Visitor;
 
 mod parser;
 
-// Provide the inner return type of a request handler that TypeScript callers will care about.
-//
-// i.e. Result<Json<Message>> -> "Message"
+/// Provide the inner return type of a request handler that TypeScript callers will care about.
+///
+/// i.e. Result<Json<Message>> -> "Message"
 fn inner_return_type(node: &ReturnType) -> String {
     if let ReturnType::Type(_, type_box) = node {
         match inner_box_type(type_box) {
@@ -63,6 +63,7 @@ enum Commands {
     },
 }
 
+/// Main function to parse command-line arguments and generate TypeScript interfaces.
 fn main() -> std::io::Result<()> {
     let args = Cli::parse();
     let mut files: Vec<PathBuf> = vec![];
