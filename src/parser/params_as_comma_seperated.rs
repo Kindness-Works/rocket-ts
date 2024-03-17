@@ -3,6 +3,7 @@ use quote::quote;
 use syn::{FnArg, Type};
 
 use crate::inner_type_from_path_segment;
+use crate::parser::exclusion_parser::should_exclude_type;
 
 /// Generates a comma-separated string of parameter names and their types.
 ///
@@ -18,7 +19,7 @@ use crate::inner_type_from_path_segment;
 ///
 /// A comma-separated string of parameter names and their types.
 
-pub fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
+pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &Vec<String>) -> String {
     let mut params = Vec::new();
 
     for arg in args {
@@ -66,6 +67,10 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
                     if let Some(inner_type) = inner_type {
                         return inner_type;
                     } else {
+                        if should_exclude_type(last.ident.to_string(), exclusion_list) == true {
+                            //println!("Skipping param {param_name} due to else #4");
+                            continue;
+                        }
                         last.ident.to_string()
                     }
                 }

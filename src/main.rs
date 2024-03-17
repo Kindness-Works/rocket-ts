@@ -12,6 +12,7 @@ use syn::{visit::Visit, ReturnType};
 use parser::inner_box_type::inner_box_type;
 use parser::inner_type_from_path_segment::inner_type_from_path_segment;
 use parser::params_as_comma_seperated::params_as_comma_separated_str;
+use parser::exclusion_parser::parse_exclusion_file;
 use parser::visitor::Visitor;
 
 mod parser;
@@ -46,7 +47,6 @@ enum Commands {
         #[clap(
             required = true,
             help = "Input directory Or Input file",
-            default_value = "thread.rs",
             short = 'i',
             long = "input"
         )]
@@ -55,11 +55,18 @@ enum Commands {
         #[clap(
             required = true,
             help = "Output file",
-            default_value = "k7.ts",
             short = 'o',
             long = "output"
         )]
         output_file: String,
+
+        #[clap(
+            required = false,
+            help = "Exclusion file",
+            short = 'e',
+            long = "exclude"
+        )]
+        exclude_file: Option<String>,
     },
 }
 
@@ -72,6 +79,7 @@ fn main() -> std::io::Result<()> {
         Commands::Generate {
             input_dir_or_file,
             output_file,
+            exclude_file,
         } => {
             if input_dir_or_file.is_file() {
                 let file_path = input_dir_or_file;
@@ -101,6 +109,14 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
+            let exclusion_list = if let Some(exclude_file) = exclude_file {
+                println!("Loading the Exclusion File : {}", &exclude_file);
+                parse_exclusion_file(&exclude_file)
+            } else {
+                // If no exclusion file is provided, initializing an empty exclusion list so the compiler doesnt panic
+                Vec::new()
+            };
+
             println!("Loading the Output File : {}", &output_file);
 
             let mut ts = r#"/*
@@ -122,7 +138,7 @@ fn main() -> std::io::Result<()> {
 
                 ts.push_str(&format!(" // {file_name_str}\n"));
                 for handler in visitor.functions {
-                    let params = params_as_comma_separated_str(handler.params);
+                    let params = params_as_comma_separated_str(handler.params,&exclusion_list);
                     let return_type = inner_return_type(&handler.return_type);
                     ts.push_str(&format!("    // Route: \"{}\"\n", handler.path));
                     ts.push_str(&format!(
