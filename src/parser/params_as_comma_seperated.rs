@@ -5,15 +5,17 @@ use syn::{FnArg, Type};
 use crate::inner_type_from_path_segment;
 use crate::parser::exclusion_parser::should_exclude_type;
 
-/// Generates a comma-separated string of parameter names and their types.
+/// Generates a comma-separated string of parameter names and their types, excluding specified types.
 ///
-/// This function takes a vector of FnArg items, typically representing the arguments of a function,
+/// This function takes a vector of `FnArg` items, typically representing the arguments of a function,
 /// and generates a comma-separated string of parameter names and their types. It handles various
-/// types of function arguments including references, path types, and more.
+/// types of function arguments including references, path types, and more. Additionally, it excludes
+/// types specified in the provided exclusion list.
 ///
 /// # Arguments
 ///
-/// * `args` - A vector of FnArg items representing the arguments of a function.
+/// * `args` - A vector of `FnArg` items representing the arguments of a function.
+/// * `exclusion_list` - A reference to a vector of strings representing types to be excluded.
 ///
 /// # Returns
 ///
