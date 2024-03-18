@@ -64,7 +64,8 @@ enum Commands {
             required = false,
             help = "Exclusion file",
             short = 'e',
-            long = "exclude-type"
+            long = "exclude-type
+            "
         )]
         exclude_file: Option<String>,
     },
