@@ -109,13 +109,18 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            let exclusion_list = if let Some(exclude_file) = exclude_file {
+            let mut exclusion_list = Vec::new();
+
+            if let Some(exclude_file) = exclude_file {
                 println!("Loading the Exclusion File : {}", &exclude_file);
-                parse_exclusion_file(&exclude_file)
-            } else {
-                // If no exclusion file is provided, initializing an empty exclusion list so the compiler doesnt panic
-                Vec::new()
-            };
+                match parse_exclusion_file(&exclude_file) {
+                    Ok(parsed_list) => exclusion_list = parsed_list,
+                    Err(err) => {
+                        eprintln!("Error reading exclusion file: {}", err);
+                        std::process::exit(1);
+                    }
+                }
+            }
 
             println!("Loading the Output File : {}", &output_file);
 
