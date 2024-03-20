@@ -9,10 +9,10 @@ use std::io::Write;
 use std::{fs, path::PathBuf};
 use syn::{visit::Visit, ReturnType};
 
+use parser::exclusion_parser::parse_exclusion_file;
 use parser::inner_box_type::inner_box_type;
 use parser::inner_type_from_path_segment::inner_type_from_path_segment;
 use parser::params_as_comma_seperated::params_as_comma_separated_str;
-use parser::exclusion_parser::parse_exclusion_file;
 use parser::visitor::Visitor;
 
 mod parser;
@@ -46,7 +46,7 @@ enum Commands {
     Generate {
         #[clap(
             required = true,
-            help = "Input directory Or Input file",
+            help = "Input directory Or Input file for the rust files to parse for generating the interface.",
             short = 'i',
             long = "input"
         )]
@@ -54,7 +54,7 @@ enum Commands {
 
         #[clap(
             required = true,
-            help = "Output file",
+            help = "Output file to write the interface to.",
             short = 'o',
             long = "output"
         )]
@@ -62,10 +62,9 @@ enum Commands {
 
         #[clap(
             required = false,
-            help = "Exclusion file",
+            help = "Exclusion file for excluding parameters from the generated interface.Primary usecase - Request Guards.",
             short = 'e',
-            long = "exclude-type
-            "
+            long = "exclude-type"
         )]
         exclude_file: Option<String>,
     },
@@ -139,7 +138,7 @@ fn main() -> std::io::Result<()> {
 
                 ts.push_str(&format!(" // {file_name_str}\n"));
                 for handler in visitor.functions {
-                    let params = params_as_comma_separated_str(handler.params,&exclusion_list);
+                    let params = params_as_comma_separated_str(handler.params, &exclusion_list);
                     let return_type = inner_return_type(&handler.return_type);
                     ts.push_str(&format!("    // Route: \"{}\"\n", handler.path));
                     ts.push_str(&format!(
