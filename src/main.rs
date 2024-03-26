@@ -153,7 +153,7 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            ts.push_str("}");
+            ts.push('}');
 
             let mut out = File::create(&output_file).expect("Could not create file");
             out.write_all(ts.as_bytes()).expect("Unable to write data");

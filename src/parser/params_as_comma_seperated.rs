@@ -11,17 +11,8 @@ use crate::parser::exclusion_parser::should_exclude_type;
 /// and generates a comma-separated string of parameter names and their types. It handles various
 /// types of function arguments including references, path types, and more. Additionally, it excludes
 /// types specified in the provided exclusion list.
-///
-/// # Arguments
-///
-/// * `args` - A vector of `FnArg` items representing the arguments of a function.
-/// * `exclusion_list` - A reference to a vector of strings representing types to be excluded.
-///
-/// # Returns
-///
-/// A comma-separated string of parameter names and their types.
 
-pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &Vec<String>) -> String {
+pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]) -> String {
     let mut params = Vec::new();
 
     for arg in args {
@@ -69,7 +60,7 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &Vec<Stri
                     if let Some(inner_type) = inner_type {
                         return inner_type;
                     } else {
-                        if should_exclude_type(last.ident.to_string(), exclusion_list) == true {
+                        if should_exclude_type(last.ident.to_string(), exclusion_list) {
                             //println!("Skipping param {param_name} due to else #4");
                             continue;
                         }
