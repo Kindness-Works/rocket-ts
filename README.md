@@ -1,5 +1,3 @@
-<!-- @format -->
-
 # Rocket 💫 TypeScript
 
 ![License](https://img.shields.io/github/license/Kindness-Works/rocket-ts)
