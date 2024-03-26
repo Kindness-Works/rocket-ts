@@ -22,9 +22,8 @@ mod parser;
 /// i.e. Result<Json<Message>> -> "Message"
 fn inner_return_type(node: &ReturnType) -> String {
     if let ReturnType::Type(_, type_box) = node {
-        match inner_box_type(type_box) {
-            Some(inner) => return inner,
-            None => {}
+        if let Some(inner) = inner_box_type(type_box) {
+            return inner;
         }
     }
 
@@ -46,25 +45,28 @@ enum Commands {
     Generate {
         #[clap(
             required = true,
-            help = "Input directory Or Input file for the rust files to parse for generating the interface.",
+            help = "Input directory or file to parse for interface generation.",
             short = 'i',
-            long = "input"
+            long = "input",
+            value_name = "INPUT"
         )]
         input_dir_or_file: PathBuf,
 
         #[clap(
             required = true,
-            help = "Output file to write the interface to.",
+            help = "Output file for the generated interface.",
             short = 'o',
-            long = "output"
+            long = "output",
+            value_name = "OUTPUT"
         )]
         output_file: String,
 
         #[clap(
             required = false,
-            help = "Exclusion file for excluding parameters from the generated interface.Primary usecase - Request Guards.",
+            help = "File to exclude parameters from the interface (e.g., Request Guards).",
             short = 'e',
-            long = "exclude-type"
+            long = "exclude-type",
+            value_name = "EXCLUDE"
         )]
         exclude_file: Option<String>,
     },
@@ -116,7 +118,7 @@ fn main() -> std::io::Result<()> {
                 match parse_exclusion_file(&exclude_file) {
                     Ok(parsed_list) => exclusion_list = parsed_list,
                     Err(err) => {
-                        eprintln!("Error reading exclusion file: {}", err);
+                        eprintln!("Error reading exclusion file: {}  [{}]", &exclude_file, err);
                         std::process::exit(1);
                     }
                 }
