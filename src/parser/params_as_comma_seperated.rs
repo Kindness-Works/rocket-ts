@@ -3,22 +3,16 @@ use quote::quote;
 use syn::{FnArg, Type};
 
 use crate::inner_type_from_path_segment;
+use crate::parser::exclusion_parser::should_exclude_type;
 
-/// Generates a comma-separated string of parameter names and their types.
+/// Generates a comma-separated string of parameter names and their types, excluding specified types.
 ///
-/// This function takes a vector of FnArg items, typically representing the arguments of a function,
+/// This function takes a vector of `FnArg` items, typically representing the arguments of a function,
 /// and generates a comma-separated string of parameter names and their types. It handles various
-/// types of function arguments including references, path types, and more.
-///
-/// # Arguments
-///
-/// * `args` - A vector of FnArg items representing the arguments of a function.
-///
-/// # Returns
-///
-/// A comma-separated string of parameter names and their types.
+/// types of function arguments including references, path types, and more. Additionally, it excludes
+/// types specified in the provided exclusion list.
 
-pub fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
+pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]) -> String {
     let mut params = Vec::new();
 
     for arg in args {
@@ -66,6 +60,10 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>) -> String {
                     if let Some(inner_type) = inner_type {
                         return inner_type;
                     } else {
+                        if should_exclude_type(last.ident.to_string(), exclusion_list) {
+                            //println!("Skipping param {param_name} due to else #4");
+                            continue;
+                        }
                         last.ident.to_string()
                     }
                 }

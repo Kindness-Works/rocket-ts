@@ -9,6 +9,7 @@ use std::io::Write;
 use std::{fs, path::PathBuf};
 use syn::{visit::Visit, ReturnType};
 
+use parser::exclusion_parser::parse_exclusion_file;
 use parser::inner_box_type::inner_box_type;
 use parser::inner_type_from_path_segment::inner_type_from_path_segment;
 use parser::params_as_comma_seperated::params_as_comma_separated_str;
@@ -21,9 +22,8 @@ mod parser;
 /// i.e. Result<Json<Message>> -> "Message"
 fn inner_return_type(node: &ReturnType) -> String {
     if let ReturnType::Type(_, type_box) = node {
-        match inner_box_type(type_box) {
-            Some(inner) => return inner,
-            None => {}
+        if let Some(inner) = inner_box_type(type_box) {
+            return inner;
         }
     }
 
@@ -45,21 +45,30 @@ enum Commands {
     Generate {
         #[clap(
             required = true,
-            help = "Input directory Or Input file",
-            default_value = "thread.rs",
+            help = "Input directory or file to parse for interface generation.",
             short = 'i',
-            long = "input"
+            long = "input",
+            value_name = "INPUT"
         )]
         input_dir_or_file: PathBuf,
 
         #[clap(
             required = true,
-            help = "Output file",
-            default_value = "k7.ts",
+            help = "Output file for the generated interface.",
             short = 'o',
-            long = "output"
+            long = "output",
+            value_name = "OUTPUT"
         )]
         output_file: String,
+
+        #[clap(
+            required = false,
+            help = "File to exclude parameters from the interface (e.g., Request Guards).",
+            short = 'e',
+            long = "exclude-type",
+            value_name = "EXCLUDE"
+        )]
+        exclude_file: Option<String>,
     },
 }
 
@@ -72,6 +81,7 @@ fn main() -> std::io::Result<()> {
         Commands::Generate {
             input_dir_or_file,
             output_file,
+            exclude_file,
         } => {
             if input_dir_or_file.is_file() {
                 let file_path = input_dir_or_file;
@@ -101,6 +111,19 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
+            let mut exclusion_list = Vec::new();
+
+            if let Some(exclude_file) = exclude_file {
+                println!("Loading the Exclusion File : {}", &exclude_file);
+                match parse_exclusion_file(&exclude_file) {
+                    Ok(parsed_list) => exclusion_list = parsed_list,
+                    Err(err) => {
+                        eprintln!("Error reading exclusion file: {}  [{}]", &exclude_file, err);
+                        std::process::exit(1);
+                    }
+                }
+            }
+
             println!("Loading the Output File : {}", &output_file);
 
             let mut ts = r#"/*
@@ -122,7 +145,7 @@ fn main() -> std::io::Result<()> {
 
                 ts.push_str(&format!(" // {file_name_str}\n"));
                 for handler in visitor.functions {
-                    let params = params_as_comma_separated_str(handler.params);
+                    let params = params_as_comma_separated_str(handler.params, &exclusion_list);
                     let return_type = inner_return_type(&handler.return_type);
                     ts.push_str(&format!("    // Route: \"{}\"\n", handler.path));
                     ts.push_str(&format!(
@@ -132,7 +155,7 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            ts.push_str("}");
+            ts.push('}');
 
             let mut out = File::create(&output_file).expect("Could not create file");
             out.write_all(ts.as_bytes()).expect("Unable to write data");
