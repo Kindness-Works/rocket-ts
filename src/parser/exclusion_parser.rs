@@ -6,6 +6,7 @@ pub fn parse_exclusion_file(exclusion_file_path: &String) -> Result<Vec<String>,
         contents
             .lines()
             .map(|line| line.trim().to_string())
+            .filter(|l| !l.starts_with('#'))
             .collect()
     })
 }
