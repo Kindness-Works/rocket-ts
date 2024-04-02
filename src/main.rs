@@ -53,7 +53,7 @@ enum Commands {
         input_dir_or_file: PathBuf,
 
         #[clap(
-            help = "Output file for the generated interface.",
+            help = "Optional output file. STDOUT if not provided.",
             short = 'o',
             long = "output",
             value_name = "OUTPUT"
@@ -62,7 +62,7 @@ enum Commands {
 
         #[clap(
             required = false,
-            help = "File to exclude parameters from the interface (e.g., Request Guards).",
+            help = "File listing parameters to exclude (e.g., Request Guards).",
             short = 'e',
             long = "exclude-type",
             value_name = "EXCLUDE"
