@@ -19,10 +19,15 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]
         if let FnArg::Typed(syn::PatType { pat, ty, .. }) = arg {
             let pat_ident = match &*pat {
                 syn::Pat::Ident(pat_ident) => pat_ident,
-                _ => continue,
+                _ => {
+                    continue
+                },
             };
 
             let param_name = pat_ident.ident.to_string();
+
+            #[cfg(debug_assertions)]
+            println!("Examining param <{param_name}>");
 
             let param_type = match &*ty {
                 Type::Reference(ref type_reference) => {
@@ -36,9 +41,13 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]
                             } else {
                                 continue;
                             }
-                        } else {
-                            continue;
                         }
+                        else {
+                            if type_path.path.is_ident("str") {
+                                "string".to_string()
+                            } else {
+                                continue;
+                            }                        }
                     } else {
                         continue;
                     }
@@ -56,7 +65,12 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]
                             println!("Excluding param {param_name}:{}", last.ident.to_string());
                             continue;
                         }
-                        last.ident.to_string()
+
+                        // TODO: use [TypeShare](https://github.com/1Password/typeshare) smarts
+                        match last.ident.to_string().as_str() {
+                            "i32" | "i64" | "u32" | "u64" | "f32" | "f64" | "usize" => "number".to_string(),
+                            t => t.to_string(),
+                        }
                     }
                 }
                 _ => {
@@ -66,6 +80,10 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]
                 }
             };
             params.push(format!("{}:{}", param_name, param_type));
+        }
+        else {
+            #[cfg(debug_assertions)]
+            println!("Skipping param w/ Receiver type");
         }
     }
 
