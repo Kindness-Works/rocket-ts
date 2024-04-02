@@ -15,9 +15,9 @@ pub fn routes() -> Vec<rocket::Route> {
 }
 
 /// Load the thread using the Kindness ID or Cerb ticket mask
-#[get("/thread/<kid_or_cerb_mask>", format = "json")]
-async fn get_thread(kid_or_cerb_mask: &str, service: AgentService) -> K7Response<Thread> {
-    service.get_thread(kid_or_cerb_mask).await.into()
+#[get("/thread/<kid_or_ticket_mask>", format = "json")]
+async fn get_thread(kid_or_ticket_mask: &str, service: AgentService) -> K7Response<Thread> {
+    service.get_thread(kid_or_ticket_mask).await.into()
 }
 
 /// A debug page for inspecting the exact prompt that would be sent to OpenAI
