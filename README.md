@@ -28,7 +28,7 @@ This and similar routes can be found in [`example-handlers/thread.rs`](/example-
 
 ```shell
 cargo run generate -i example-handlers -e ./example-handlers/exclude.txt
-``
+```
 
 ```typescript
 /*
