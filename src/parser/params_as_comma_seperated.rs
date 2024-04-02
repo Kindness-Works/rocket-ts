@@ -32,21 +32,14 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]
                         {
                             if let Some(inner_type) = params.args.first() {
                                 let ts: TokenStream = quote! { #inner_type };
-                                //println!("{}", ts);
                                 ts.to_string()
                             } else {
-                                //println!("Skipping param {param_name} due to else #1");
-
                                 continue;
                             }
                         } else {
-                            //println!("Skipping param {param_name} due to else #2");
-
                             continue;
                         }
                     } else {
-                        //println!("Skipping param {param_name} due to else #3");
-
                         continue;
                     }
                 }
@@ -54,21 +47,21 @@ pub fn params_as_comma_separated_str(args: Vec<FnArg>, exclusion_list: &[String]
                     let path = &type_path.path;
                     let last = path.segments.iter().last().unwrap();
 
-                    //println!("last={}", last.ident);
-
                     let inner_type = inner_type_from_path_segment(last);
                     if let Some(inner_type) = inner_type {
                         return inner_type;
                     } else {
                         if should_exclude_type(last.ident.to_string(), exclusion_list) {
-                            //println!("Skipping param {param_name} due to else #4");
+                            #[cfg(debug_assertions)]
+                            println!("Excluding param {param_name}:{}", last.ident.to_string());
                             continue;
                         }
                         last.ident.to_string()
                     }
                 }
                 _ => {
-                    //println!("Skipping param {param_name} due to missing match");
+                    #[cfg(debug_assertions)]
+                    println!("Skipping param <{param_name}> due to missing match");
                     continue;
                 }
             };
