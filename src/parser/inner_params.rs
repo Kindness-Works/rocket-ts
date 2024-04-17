@@ -81,7 +81,8 @@ pub fn _inner_param(type_box: &Box<Type>) -> String {
                     syn::PathArguments::None => return String::from("void"),
                 }
             } else {
-                //println!("segment.ident = {}", segment.ident);
+                #[cfg(debug_assertions)]
+                println!("Ignoring segment.ident <{}>", segment.ident);
             }
         }
     }

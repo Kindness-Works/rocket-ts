@@ -1,0 +1,2 @@
+# Types to exclude from TypeScript interface. One per line.
+AgentService

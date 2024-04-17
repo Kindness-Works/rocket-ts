@@ -50,8 +50,6 @@ pub fn inner_type_from_path_segment(segment: &syn::PathSegment) -> Option<String
             syn::PathArguments::None => return Some(String::from("void")),
         }
     } else if segment.ident == "Json" {
-        // println!("segment.ident =  Json");
-
         match &segment.arguments {
             syn::PathArguments::AngleBracketed(params) => {
                 if let Some(syn::GenericArgument::Type(Type::Path(inner_type))) =
@@ -85,11 +83,9 @@ pub fn inner_type_from_path_segment(segment: &syn::PathSegment) -> Option<String
             }
             syn::PathArguments::None => return Some(String::from("void")),
         }
-    } else {
-        // println!("segment.ident = {}", segment.ident);
     }
 
-    // println!("inner_type_from_path_segment ending w/ None");
+    // There is no inner type. E.g. String, AgentService, etc.
 
     None
 }
