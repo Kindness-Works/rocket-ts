@@ -70,7 +70,11 @@ enum Commands {
         )]
         exclude_file: Option<String>,
 
-        #[clap(help = "Enable verbose debug mode", short = 'v', long = "verbose")]
+        #[clap(
+            help = "Enable detailed debug output for troubleshooting",
+            short = 'v',
+            long = "verbose"
+        )]
         verbose: bool,
     },
 }
