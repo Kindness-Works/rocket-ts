@@ -2,6 +2,8 @@
 
 ![License](https://img.shields.io/github/license/Kindness-Works/rocket-ts)
 
+**Archived**: This project is no longer maintained. [Kindness](https://kindness.ai) now generates an OpenAPI Spec using [Okapi](https://crates.io/crates/okapi) and [Schemars](https://crates.io/crates/schemars). Archived for nostalgia and reference for what ChatGPT code generation looked like in late 2023. 🤖
+
 **rocket-ts** generates TypeScript interfaces directly from [Rocket](https://rocket.rs) route handlers. Using generated types on your frontend ensures it remains in sync with every 🚀 endpoint, enabling you to quickly find errors and add additional safety to your frontend.
 
 Inspired by [TypeShare](https://github.com/1Password/typeshare), it aims to bring kindness to frontend engineers working with Rocket. 🤗
