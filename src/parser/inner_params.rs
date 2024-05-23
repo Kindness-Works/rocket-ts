@@ -1,4 +1,5 @@
 use syn::Type;
+use log::debug;
 
 /// Extracts the inner parameter type from a boxed Type.
 ///
@@ -81,8 +82,7 @@ pub fn _inner_param(type_box: &Box<Type>) -> String {
                     syn::PathArguments::None => return String::from("void"),
                 }
             } else {
-                #[cfg(debug_assertions)]
-                println!("Ignoring segment.ident <{}>", segment.ident);
+                debug!("Ignoring segment.ident <{}>", segment.ident);
             }
         }
     }
